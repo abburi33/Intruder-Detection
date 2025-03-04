@@ -1,47 +1,121 @@
-import React from "react";
-import { View, Text, FlatList, Image, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  Modal,
+} from "react-native";
 
-// Move the image array inside the component
-const intruderImages = [
-  { id: "1", uri: require("../assets/intruders/intruder1.jpg") },
-  { id: "2", uri: require("../assets/intruders/intruder2.jpg") },
-  { id: "3", uri: require("../assets/intruders/intruder3.jpg") },
-  { id: "4", uri: require("../assets/intruders/intruder4.jpg") },
-];
+const API_URL = "http://127.0.0.1:8000/photos"; // Replace with your Flask server IP
 
-export default function IntruderGallery() {
+const GalleryScreen = () => {
+  const [photos, setPhotos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  // Fetch intruder images from Flask
+  useEffect(() => {
+    const fetchPhotos = async () => {
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        setPhotos(data);
+      } catch (error) {
+        console.error("Error fetching photos:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPhotos();
+  }, []);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Intruder Gallery</Text>
-      <FlatList
-        data={intruderImages}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.imageCard}>
-            <Image source={item.uri} style={styles.image} />
-          </View>
-        )}
-        numColumns={2} // Display images in a grid
-      />
+      <Text style={styles.heading}>Intruder Gallery</Text>
+      {loading ? (
+        <ActivityIndicator size="large" color="red" />
+      ) : (
+        <FlatList
+          data={photos}
+          keyExtractor={(item) => item.name}
+          numColumns={3} // Display images in a grid
+          renderItem={({ item }) => (
+            <TouchableOpacity onPress={() => setSelectedImage(item.url)}>
+              <Image source={{ uri: item.url }} style={styles.imageThumbnail} />
+            </TouchableOpacity>
+          )}
+        />
+      )}
+
+      {/* Full Image Modal */}
+      <Modal
+        visible={!!selectedImage}
+        transparent={true}
+        onRequestClose={() => setSelectedImage(null)}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setSelectedImage(null)}
+          >
+            <Text style={styles.closeText}>✖ Close</Text>
+          </TouchableOpacity>
+          {selectedImage && (
+            <Image source={{ uri: selectedImage }} style={styles.fullImage} />
+          )}
+        </View>
+      </Modal>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5", padding: 10 },
-  title: {
+  container: {
+    flex: 1,
+    backgroundColor: "#121212",
+    padding: 10,
+  },
+  heading: {
     fontSize: 22,
     fontWeight: "bold",
+    color: "white",
     textAlign: "center",
     marginBottom: 10,
   },
-  imageCard: {
-    flex: 1,
+  imageThumbnail: {
+    width: 100,
+    height: 100,
     margin: 5,
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 8,
-    elevation: 3,
+    borderRadius: 10,
   },
-  image: { width: "100%", height: 150, borderRadius: 8, resizeMode: "cover" },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    backgroundColor: "red",
+    padding: 10,
+    borderRadius: 10,
+  },
+  closeText: {
+    color: "white",
+    fontWeight: "bold",
+  },
+  fullImage: {
+    width: "90%",
+    height: "70%",
+    borderRadius: 10,
+  },
 });
+
+export default GalleryScreen;
