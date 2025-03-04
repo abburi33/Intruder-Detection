@@ -2,72 +2,76 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  FlatList,
   Image,
+  FlatList,
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
   Modal,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-const API_URL = "http://127.0.0.1:8000/photos"; // Replace with your Flask server IP
+// Replace with your actual API endpoint or Firebase Storage method
+const API_URL = "http://127.0.0.1:8000/photos";
 
-const GalleryScreen = () => {
-  const [photos, setPhotos] = useState([]);
+const ImageGallery = () => {
+  const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // Fetch intruder images from Flask
   useEffect(() => {
-    const fetchPhotos = async () => {
+    const fetchImages = async () => {
       try {
         const response = await fetch(API_URL);
-        const data = await response.json();
-        setPhotos(data);
+        const data = await response.json(); // Convert API response to JSON
+
+        // Extract only the "url" field from each object
+        const imageUrls = data.map((item) => item.url);
+
+        setImages(imageUrls);
       } catch (error) {
-        console.error("Error fetching photos:", error);
+        console.error("Error fetching images:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchPhotos();
+    fetchImages();
   }, []);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.heading}>Intruder Gallery</Text>
+      <Text style={styles.header}>📷 Intruder Gallery</Text>
+
       {loading ? (
-        <ActivityIndicator size="large" color="red" />
+        <ActivityIndicator size="large" color="white" />
       ) : (
         <FlatList
-          data={photos}
-          keyExtractor={(item) => item.name}
-          numColumns={3} // Display images in a grid
+          data={images}
+          keyExtractor={(item, index) => index.toString()}
+          numColumns={2} // Display images in a grid
+          contentContainerStyle={styles.grid}
           renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => setSelectedImage(item.url)}>
-              <Image source={{ uri: item.url }} style={styles.imageThumbnail} />
+            <TouchableOpacity
+              style={styles.imageContainer}
+              onPress={() => setSelectedImage(item)}
+            >
+              <Image source={{ uri: item }} style={styles.image} />
             </TouchableOpacity>
           )}
         />
       )}
 
-      {/* Full Image Modal */}
-      <Modal
-        visible={!!selectedImage}
-        transparent={true}
-        onRequestClose={() => setSelectedImage(null)}
-      >
+      {/* Modal for Full-Screen Image View */}
+      <Modal visible={!!selectedImage} transparent animationType="fade">
         <View style={styles.modalContainer}>
           <TouchableOpacity
-            style={styles.closeButton}
             onPress={() => setSelectedImage(null)}
+            style={styles.closeButton}
           >
-            <Text style={styles.closeText}>✖ Close</Text>
+            <Ionicons name="close-circle" size={30} color="white" />
           </TouchableOpacity>
-          {selectedImage && (
-            <Image source={{ uri: selectedImage }} style={styles.fullImage} />
-          )}
+          <Image source={{ uri: selectedImage }} style={styles.fullImage} />
         </View>
       </Modal>
     </View>
@@ -75,47 +79,30 @@ const GalleryScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#121212",
-    padding: 10,
-  },
-  heading: {
+  container: { flex: 1, padding: 20, backgroundColor: "#121212" },
+  header: {
     fontSize: 22,
     fontWeight: "bold",
     color: "white",
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 15,
   },
-  imageThumbnail: {
-    width: 100,
-    height: 100,
-    margin: 5,
-    borderRadius: 10,
-  },
+  grid: { justifyContent: "center" },
+  imageContainer: { flex: 1, margin: 5, alignItems: "center" },
+  image: { width: "100%", height: 150, borderRadius: 10 },
   modalContainer: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.9)",
     justifyContent: "center",
     alignItems: "center",
   },
-  closeButton: {
-    position: "absolute",
-    top: 40,
-    right: 20,
-    backgroundColor: "red",
-    padding: 10,
-    borderRadius: 10,
-  },
-  closeText: {
-    color: "white",
-    fontWeight: "bold",
-  },
   fullImage: {
     width: "90%",
     height: "70%",
+    resizeMode: "contain",
     borderRadius: 10,
   },
+  closeButton: { position: "absolute", top: 40, right: 20 },
 });
 
-export default GalleryScreen;
+export default ImageGallery;
