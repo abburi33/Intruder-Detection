@@ -71,8 +71,6 @@ Traditional surveillance systems are bulky, expensive, and prone to false alarms
 
 ## 📸 App Screenshots
 
-> _(Add screenshots to this section in GitHub UI)_
-
 - 📷 Gallery of captured intrusions
 - 📺 Real-time live feed
 - 🔐 Secure login/signup screen
