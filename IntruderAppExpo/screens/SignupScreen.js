@@ -10,15 +10,34 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebaseConfig";
 
 export default function SignupScreen({ navigation }) {
+  const [fullName, setFullName] = useState("");
+  const [username, setUsername] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
   const handleSignup = async () => {
+    if (
+      !fullName ||
+      !username ||
+      !phone ||
+      !email ||
+      !password ||
+      !confirmPassword
+    ) {
+      setError("All fields are required.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
     try {
       await createUserWithEmailAndPassword(auth, email, password);
-      alert("Signup successful! You can now log in.");
-      navigation.navigate("Login");
+      alert("Signup successful! Redirecting to login...");
+      navigation.replace("Login");
     } catch (error) {
       setError(error.message);
     }
@@ -30,8 +49,31 @@ export default function SignupScreen({ navigation }) {
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <TextInput
         style={styles.input}
+        placeholder="Full Name"
+        placeholderTextColor="#aaa"
+        value={fullName}
+        onChangeText={setFullName}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Username"
+        placeholderTextColor="#aaa"
+        value={username}
+        onChangeText={setUsername}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Phone Number"
+        placeholderTextColor="#aaa"
+        keyboardType="phone-pad"
+        value={phone}
+        onChangeText={setPhone}
+      />
+      <TextInput
+        style={styles.input}
         placeholder="Email"
         placeholderTextColor="#aaa"
+        keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
@@ -42,6 +84,14 @@ export default function SignupScreen({ navigation }) {
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Confirm Password"
+        placeholderTextColor="#aaa"
+        secureTextEntry
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
       />
       <TouchableOpacity style={styles.button} onPress={handleSignup}>
         <Text style={styles.buttonText}>Sign Up</Text>
