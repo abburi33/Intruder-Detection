@@ -34,3 +34,10 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+
+# captured images strage folder
+intruders
+
+# secrets
+firebase_key.json
+firebaseConfig.js
